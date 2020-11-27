@@ -24,6 +24,17 @@ public:
 		return !degree ? res : res * 180. / PI;
 	}
 
+	double ith_weight(int i, RowVector2d &v) {
+		RowVector2d v_im1 = i > 0 ? V.row(i - 1) : V.row(n - 1);
+		RowVector2d v_i = V.row(i);
+		cout << V.row(i) << endl;
+		RowVector2d v_ip1 = i < n - 1 ? V.row(i + 1) : V.row(0);
+		double a_im1 = angle(v_im1, v, v_i);
+		double a_i = angle(v_i, v, v_ip1);
+		double w_i = (tan(a_im1 / 2.) + tan(a_i / 2.)) / (v_i - v).norm();
+		return w_i;
+	}
+
 	void compute_weight(RowVector2d& v) {
 		// output: list of weight w.r.t v
 		// w_i(v) = (tan(a_{i-1}/2) + tan(a_i/2))/norm(v_i-v) for all i
@@ -33,12 +44,7 @@ public:
 		weight_sum = 0;
 
 		for (int i = 0; i < n; i++) {
-			RowVector2d v_im1 = i > 0 ? V.row(i - 1) : V.row(n - 1);
-			RowVector2d v_i = V.row(i);
-			RowVector2d v_ip1 = i < n - 1 ? V.row(i + 1) : V.row(0);
-			double a_im1 = angle(v_im1, v, v_i);
-			double a_i = angle(v_i, v, v_ip1);
-			double w_i = (tan(a_im1 / 2.) + tan(a_i / 2.)) / (v_i - v).norm();
+			double w_i = ith_weight(i,v);
 			weight.push_back(w_i);
 			weight_sum += w_i;
 		}
