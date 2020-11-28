@@ -98,32 +98,51 @@ int main(int argc, char *argv[])
 
 	MatrixXd C = MatrixXd::Zero(1, 3);			// color 
 	MatrixXd W = MatrixXd::Zero(V.rows(), 2);		// V shifted by 1 to draw edges
+	MatrixXd Vp = V;
+	Vp.row(6) = RowVector2d(-4, -8);
+	Vp.row(7) = RowVector2d(-1.5, -8);
 
-	RowVector2d P1(1., 0.);
-	RowVector2d P2(0., 0.);
-	RowVector2d P3(-0.1, -1.);
+	MatrixXd Wp = MatrixXd::Zero(Vp.rows(), 2);
+
+	//RowVector2d P1(1., 0.);
+	//RowVector2d P2(0., 0.);
+	//RowVector2d P3(-0.1, -1.);
 
 	MeanValueCoordinates mvc = MeanValueCoordinates(V);
-	//mvc.compute_lambda(P2);
-	//auto l = mvc.get_lambda();
-	//print(l);
 
-	for (int x = -8; x <= 8; x++) {
-		for (int y = -7; y <= 7; y++) {
-			int i = 0;
-			RowVector2d P(x, y);
-			double w = mvc.ith_weight(i, P);			// compute the weight from i-th vertex of the cage to point P
-			RowVector3d T(x, y, w);
-			viewer.data().add_points(T,C);
+	double e = 0.5;
+
+	for (int x = -10; x <= 10; x++) {
+		for (int y = -10; y <= 10; y++) {
+
+			//int i = 7;
+			double xx = x+e; double yy = y + e;
+			RowVector2d P(xx, yy);
+			mvc.compute_lambda(P);
+			auto l = mvc.get_lambda();
+			RowVector2d temp(0., 0.);
+			for (int i = 0; i < l.size(); i++) {
+				temp += l[i] * Vp.row(i);
+			}
+
+			//double w = mvc.ith_weight(i, P);			// compute the weight from i-th vertex of the cage to point P
+			//RowVector3d T(xx, yy, w);
+			viewer.data().add_edges(P, temp, C);
+			viewer.data().add_points(temp,C);
+
 		}
 	}
 
 	//cout << W << endl;
 	create_edges(V, W);
 	cout << W << endl;
-	viewer.data().add_points(V,C);
+	viewer.data().add_points(V, RowVector3d(265, 0, 0));
 	viewer.data().add_edges(V, W, C);
 	viewer.data().point_size = 10;
+
+	create_edges(Vp, Wp);
+	viewer.data().add_points(Vp, RowVector3d(0, 265, 265));
+	viewer.data().add_edges(Vp, Wp, C);
 
 	//viewer.core(0).align_camera_center(V, F);
 	viewer.launch(); // run the viewer
