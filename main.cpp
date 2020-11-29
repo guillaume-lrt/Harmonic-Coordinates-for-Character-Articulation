@@ -79,6 +79,43 @@ void createCage(MatrixXd &Vertices, MatrixXi &Edges)
 		18, 0;
 }
 
+void createModel(MatrixXd& Model) {
+	Model = MatrixXd(32, 2);
+
+	Model << 0, 6.5,
+		-1, 6.3,
+		-1.4, 6,
+		-1.3, 5,
+		-1, 4.5,
+		-6.5, 2.7,
+		-7, 2,
+		-6, 1.9,
+		-2.5, 3,
+		-1.8, 2.65,
+		-1.9, -1,
+		-2.8, -6,
+		-2.6, -6.5,
+		-1.9, -6.5,
+		-1.5, -6,
+		-1, -3.3,
+		0, -1.5,
+		1, -3.3,
+		1.5, -6,
+		1.9, -6.5,
+		2.6, -6.5,
+		2.8, -6,
+		1.9, -1,
+		1.8, 2.65,
+		2.5, 3,
+		6, 1.9,
+		7, 2,
+		6.5, 2.7,
+		1, 4.5,
+		1.3, 5,
+		1.4, 6,
+		1, 6.3;
+}
+
 void create_edges(const MatrixXd& V, MatrixXd &W) {
 	// shift V by 1 to draw edges
 	int n = V.rows();
@@ -96,13 +133,17 @@ int main(int argc, char *argv[])
 	cout << V << endl;
 	igl::opengl::glfw::Viewer viewer; // create the 3d viewer
 
-	MatrixXd C = MatrixXd::Zero(1, 3);			// color 
+	MatrixXd C = MatrixXd::Zero(1, 3);			// for the color (black)
 	MatrixXd W = MatrixXd::Zero(V.rows(), 2);		// V shifted by 1 to draw edges
 	MatrixXd Vp = V;
 	Vp.row(6) = RowVector2d(-4, -8);
 	Vp.row(7) = RowVector2d(-1.5, -8);
 
 	MatrixXd Wp = MatrixXd::Zero(Vp.rows(), 2);
+
+	MatrixXd Model;
+	createModel(Model);
+	MatrixXd Wm = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
 
 	//RowVector2d P1(1., 0.);
 	//RowVector2d P2(0., 0.);
@@ -143,6 +184,10 @@ int main(int argc, char *argv[])
 	create_edges(Vp, Wp);
 	viewer.data().add_points(Vp, RowVector3d(0, 265, 265));
 	viewer.data().add_edges(Vp, Wp, C);
+
+	create_edges(Model, Wm);
+	viewer.data().add_points(Model, RowVector3d(0, 0, 265));
+	viewer.data().add_edges(Model, Wm, RowVector3d(0, 0, 265));
 
 	//viewer.core(0).align_camera_center(V, F);
 	viewer.launch(); // run the viewer
