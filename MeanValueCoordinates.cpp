@@ -65,6 +65,16 @@ public:
 		}
 	}
 
+	RowVector2d apply_interpolation(MatrixXd& V) {
+		// input: cage (deformed or not) V
+		// output: sum(lambda_i(v)*v_i)
+		RowVector2d res(0., 0.);
+		for (int i = 0; i < lambda.size(); i++) {
+			res += lambda[i] * V.row(i);
+		}
+		return res;
+	}
+
 	vector<double> get_lambda() {
 		return lambda;
 	}

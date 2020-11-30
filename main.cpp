@@ -116,13 +116,15 @@ void createModel(MatrixXd& Model) {
 		1, 6.3;
 }
 
-void create_edges(const MatrixXd& V, MatrixXd &W) {
+void draw_edges(igl::opengl::glfw::Viewer& viewer, const MatrixXd& V, RowVector3d& Color) {
+	MatrixXd W = MatrixXd::Zero(V.rows(), 2);
 	// shift V by 1 to draw edges
 	int n = V.rows();
 	for (int i = 0; i < n-1; i++) {
 		W.row(i) = V.row(i + 1);
 	}
 	W.row(n - 1) = V.row(0);
+	viewer.data().add_edges(V, W, Color);
 }
 
 // ------------ main program ----------------
@@ -133,17 +135,16 @@ int main(int argc, char *argv[])
 	cout << V << endl;
 	igl::opengl::glfw::Viewer viewer; // create the 3d viewer
 
-	MatrixXd C = MatrixXd::Zero(1, 3);			// for the color (black)
-	MatrixXd W = MatrixXd::Zero(V.rows(), 2);		// V shifted by 1 to draw edges
+	MatrixXd C = MatrixXd::Zero(1, 3);			// for the default color (black)
+
+	// create a modified cage
 	MatrixXd Vp = V;
 	Vp.row(6) = RowVector2d(-4, -8);
 	Vp.row(7) = RowVector2d(-1.5, -8);
 
-	MatrixXd Wp = MatrixXd::Zero(Vp.rows(), 2);
-
 	MatrixXd Model;
 	createModel(Model);
-	MatrixXd Wm = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
+	MatrixXd Model_transformed = MatrixXd::Zero(Model.rows(), 2);		// model after transformation
 
 	//RowVector2d P1(1., 0.);
 	//RowVector2d P2(0., 0.);
@@ -159,36 +160,51 @@ int main(int argc, char *argv[])
 			//int i = 7;
 			double xx = x+e; double yy = y + e;
 			RowVector2d P(xx, yy);
-			mvc.compute_lambda(P);
-			auto l = mvc.get_lambda();
-			RowVector2d temp(0., 0.);
-			for (int i = 0; i < l.size(); i++) {
-				temp += l[i] * Vp.row(i);
+
+			if (false) {			// if want to deform the grid 				
+				mvc.compute_lambda(P);
+				auto l = mvc.get_lambda();
+				auto temp = mvc.apply_interpolation(Vp);
+				/*RowVector2d temp(0., 0.);
+				for (int i = 0; i < l.size(); i++) {
+					temp += l[i] * Vp.row(i);
+				}*/
+
+				//double w = mvc.ith_weight(i, P);			// compute the weight from i-th vertex of the cage to point P
+				//RowVector3d T(xx, yy, w);				// plot it along the z-coordinate
+
+				// draw the deformed grid
+				viewer.data().add_edges(P, temp, C);
+				viewer.data().add_points(temp, C);
 			}
-
-			//double w = mvc.ith_weight(i, P);			// compute the weight from i-th vertex of the cage to point P
-			//RowVector3d T(xx, yy, w);
-			viewer.data().add_edges(P, temp, C);
-			viewer.data().add_points(temp,C);
-
+			else {
+				// draw the undeformed grid
+				viewer.data().add_points(P, C);
+			}
 		}
 	}
 
-	//cout << W << endl;
-	create_edges(V, W);
-	cout << W << endl;
+	if (true) {			// if want to apply deformation to the model
+		for (int i = 0; i < Model.rows(); i++) {
+			RowVector2d P = Model.row(i);
+			mvc.compute_lambda(P);
+			auto l = mvc.get_lambda();
+			Model_transformed.row(i) = mvc.apply_interpolation(Vp);
+		}
+		viewer.data().add_points(Model_transformed, RowVector3d(265, 265, 0));
+		draw_edges(viewer, Model_transformed, RowVector3d(265, 265,0));
+	}
+
+
 	viewer.data().add_points(V, RowVector3d(265, 0, 0));
-	viewer.data().add_edges(V, W, C);
+	draw_edges(viewer, V, RowVector3d(265, 0, 0));
 	viewer.data().point_size = 10;
 
-	create_edges(Vp, Wp);
 	viewer.data().add_points(Vp, RowVector3d(0, 265, 265));
-	viewer.data().add_edges(Vp, Wp, C);
+	draw_edges(viewer, Vp, RowVector3d(0, 265, 265));
 
-	create_edges(Model, Wm);
 	viewer.data().add_points(Model, RowVector3d(0, 0, 265));
-	viewer.data().add_edges(Model, Wm, RowVector3d(0, 0, 265));
+	draw_edges(viewer, Model, RowVector3d(0, 0, 265));
 
-	//viewer.core(0).align_camera_center(V, F);
 	viewer.launch(); // run the viewer
 }
