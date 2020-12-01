@@ -1,0 +1,1 @@
+/usr/bin/c++   -fPIC -g  -rdynamic CMakeFiles/ex_bin.dir/HarmonicCoordinates.cpp.o CMakeFiles/ex_bin.dir/MeanValueCoordinates.cpp.o CMakeFiles/ex_bin.dir/main.cpp.o  -o ex_bin  /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so glad/libglad.a glfw/src/libglfw3.a -lrt -lm -ldl -lX11 -lpthread 

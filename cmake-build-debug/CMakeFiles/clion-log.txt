@@ -1,0 +1,21 @@
+/home/ghosto/Documents/Programs/CLion-2020.2.4/clion-2020.2.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ghosto/Documents/uni/INF574/TODOs/Harmonic-Coordinates-for-Character-Articulation
+CMake Warning (dev) in CMakeLists.txt:
+  No project() command is present.  The top-level CMakeLists.txt file must
+  contain a literal, direct call to the project() command.  Add a line of
+  code such as
+
+    project(ProjectName)
+
+  near the top of the file, but after cmake_minimum_required().
+
+  CMake is pretending there is a "project(Project)" command on the first
+  line.
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Creating target: igl::core (igl)
+-- Creating target: igl::opengl (igl_opengl)
+-- Creating target: igl::opengl_glfw (igl_opengl_glfw)
+-- Using X11 for window creation
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/ghosto/Documents/uni/INF574/TODOs/Harmonic-Coordinates-for-Character-Articulation/cmake-build-debug

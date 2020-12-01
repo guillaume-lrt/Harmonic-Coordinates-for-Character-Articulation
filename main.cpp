@@ -13,6 +13,12 @@ using namespace std;
 
 #define PI 3.14159265
 
+typedef vector<double> v1d;
+typedef vector<v1d> v2d;
+typedef vector<v2d> v3d;
+
+
+
 MatrixXd V;
 MatrixXi E;
 
@@ -35,12 +41,13 @@ void print(vector<double> v) {
  */
 void createCage(MatrixXd &Vertices, MatrixXi &Edges)
 {
-	Vertices = MatrixXd(19, 2);
-	Edges = MatrixXi(19, 2);
 
-	Vertices << -2, 7, 
+    Vertices = MatrixXd(19, 2);
+    Edges = MatrixXi(19, 2);
+
+	Vertices << -2, 7,
 		-2.2, 5, 
-		-8, 3, 
+		-7.8, 3,
 		-7.2, 1, 
 		-2.5, 2.3, 
 		-3, -4, 
@@ -54,7 +61,7 @@ void createCage(MatrixXd &Vertices, MatrixXi &Edges)
 		3, -4,
 		2.5, 2.3,
 		7.2, 1, 
-		8, 3,
+		7.8, 3,
 		2.2, 5,
 		2, 7;
 
@@ -80,7 +87,7 @@ void createCage(MatrixXd &Vertices, MatrixXi &Edges)
 }
 
 void createModel(MatrixXd& Model) {
-	Model = MatrixXd(32, 2);
+	Model = MatrixXd(32, 2);//32
 
 	Model << 0, 6.5,
 		-1, 6.3,
@@ -116,95 +123,97 @@ void createModel(MatrixXd& Model) {
 		1, 6.3;
 }
 
-void draw_edges(igl::opengl::glfw::Viewer& viewer, const MatrixXd& V, RowVector3d& Color) {
-	MatrixXd W = MatrixXd::Zero(V.rows(), 2);
+
+void createEdges(const MatrixXd& V, MatrixXd &W) {
 	// shift V by 1 to draw edges
 	int n = V.rows();
 	for (int i = 0; i < n-1; i++) {
 		W.row(i) = V.row(i + 1);
 	}
 	W.row(n - 1) = V.row(0);
-	viewer.data().add_edges(V, W, Color);
 }
+
+
+void createGridCell(MatrixXd& grid, int s) {
+    int squareSideCells = (int)(sqrt(pow(2,s)));
+
+    int verticesPerSide = squareSideCells+1;
+    int nbOfVertices = verticesPerSide*verticesPerSide;
+    cout<< "\nsquare side nbVertices: " << squareSideCells +1;
+    cout<< "\nnbVertices: " << nbOfVertices;
+    int offsetX = -8;
+    int offsetY = 8.5;
+
+    int counterX = 0;
+    int counterY = 0;
+    int h = 2.85; //jumps between vertices
+    grid = MatrixXd(nbOfVertices, 2);
+
+    int i =0;
+    while(i<nbOfVertices) {
+
+        for(int j = 0; j<verticesPerSide; j++) {
+            grid.row(i) = RowVector2d(counterX + offsetX,counterY + offsetY);
+            counterX += h;
+            //cout<<"\n"<<i;
+            i++;
+
+        }
+        counterX = 0;
+        counterY -= h;
+
+    }
+
+}
+
+
 
 // ------------ main program ----------------
 int main(int argc, char *argv[])
 {
 
+    igl::opengl::glfw::Viewer viewer; // create the 3d viewer
+
+
 	createCage(V,E);
-	cout << V << endl;
-	igl::opengl::glfw::Viewer viewer; // create the 3d viewer
 
-	MatrixXd C = MatrixXd::Zero(1, 3);			// for the default color (black)
-
-	// create a modified cage
-	MatrixXd Vp = V;
-	Vp.row(6) = RowVector2d(-4, -8);
-	Vp.row(7) = RowVector2d(-1.5, -8);
+	MatrixXd C = MatrixXd::Zero(1, 3);			// for the color (black)
+	MatrixXd W = MatrixXd::Zero(V.rows(), 2);		// V shifted by 1 to draw edges
 
 	MatrixXd Model;
 	createModel(Model);
-	MatrixXd Model_transformed = MatrixXd::Zero(Model.rows(), 2);		// model after transformation
 
-	//RowVector2d P1(1., 0.);
-	//RowVector2d P2(0., 0.);
-	//RowVector2d P3(-0.1, -1.);
+	MatrixXd Wm = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
 
-	MeanValueCoordinates mvc = MeanValueCoordinates(V);
-
-	double e = 0.5;
-
-	for (int x = -10; x <= 10; x++) {
-		for (int y = -10; y <= 10; y++) {
-
-			//int i = 7;
-			double xx = x+e; double yy = y + e;
-			RowVector2d P(xx, yy);
-
-			if (false) {			// if want to deform the grid 				
-				mvc.compute_lambda(P);
-				auto l = mvc.get_lambda();
-				auto temp = mvc.apply_interpolation(Vp);
-				/*RowVector2d temp(0., 0.);
-				for (int i = 0; i < l.size(); i++) {
-					temp += l[i] * Vp.row(i);
-				}*/
-
-				//double w = mvc.ith_weight(i, P);			// compute the weight from i-th vertex of the cage to point P
-				//RowVector3d T(xx, yy, w);				// plot it along the z-coordinate
-
-				// draw the deformed grid
-				viewer.data().add_edges(P, temp, C);
-				viewer.data().add_points(temp, C);
-			}
-			else {
-				// draw the undeformed grid
-				viewer.data().add_points(P, C);
-			}
-		}
-	}
-
-	if (true) {			// if want to apply deformation to the model
-		for (int i = 0; i < Model.rows(); i++) {
-			RowVector2d P = Model.row(i);
-			mvc.compute_lambda(P);
-			auto l = mvc.get_lambda();
-			Model_transformed.row(i) = mvc.apply_interpolation(Vp);
-		}
-		viewer.data().add_points(Model_transformed, RowVector3d(265, 265, 0));
-		draw_edges(viewer, Model_transformed, RowVector3d(265, 265,0));
-	}
+	createEdges(V, W); //CAGE
+	viewer.data().add_points(V, RowVector3d(255, 0, 0));
+	viewer.data().add_edges(V, W, RowVector3d(0, 255, 0));
 
 
-	viewer.data().add_points(V, RowVector3d(265, 0, 0));
-	draw_edges(viewer, V, RowVector3d(265, 0, 0));
-	viewer.data().point_size = 10;
 
-	viewer.data().add_points(Vp, RowVector3d(0, 265, 265));
-	draw_edges(viewer, Vp, RowVector3d(0, 265, 265));
+	createEdges(Model, Wm); // MODEL
+	viewer.data().add_points(Model, RowVector3d(255, 255, 255));
+	viewer.data().add_edges(Model, Wm, RowVector3d(255, 0, 255));
 
-	viewer.data().add_points(Model, RowVector3d(0, 0, 265));
-	draw_edges(viewer, Model, RowVector3d(0, 0, 265));
+    MatrixXd Grid; //build grid
+    int s = 6; //based on paper, s controls size of grid 2^s
+    createGridCell(Grid, s);
+    viewer.data().add_points(Grid, RowVector3d(50, 50, 0));
 
+
+
+    //trying to create a cell grid to propagate on
+
+    v3d cells(5, v2d(3, v1d(2, 4)));
+
+
+
+
+
+
+
+
+    viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
+	//viewer.core(0).align_camera_center(V, F);
 	viewer.launch(); // run the viewer
 }
