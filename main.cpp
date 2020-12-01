@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
     for(int i = 0; i<numberOrRowCells; i++ ){
         for(int j = 0; j<numberOrColCells; j++ ){
             grid[i][j].initialize(cageVerticesCount);
-            grid[i][j].to_string(); //to print the cell type and harmonic coord
+            //grid[i][j].to_string(); //to print the cell type and harmonic coord
         }
     }
 
