@@ -1,0 +1,11 @@
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/CMakeFiles/rebuild_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/CMakeFiles/ex_bin.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/CMakeFiles/edit_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glad/CMakeFiles/rebuild_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glad/CMakeFiles/edit_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glad/CMakeFiles/glad.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glfw/CMakeFiles/rebuild_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glfw/CMakeFiles/edit_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glfw/src/CMakeFiles/rebuild_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glfw/src/CMakeFiles/edit_cache.dir
+/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/build/glfw/src/CMakeFiles/glfw.dir
