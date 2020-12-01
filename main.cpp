@@ -353,7 +353,7 @@ int main(int argc, char *argv[])
             grid[i][j].to_string(); //to print the cell type and harmonic coord
         }
     }
-
+ 
 
     viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
 	//viewer.core(0).align_camera_center(V, F);

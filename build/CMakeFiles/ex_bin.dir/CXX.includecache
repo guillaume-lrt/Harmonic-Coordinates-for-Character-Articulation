@@ -6,12 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/HarmonicCoordinates.cpp
-igl/opengl/glfw/Viewer.h
--
-math.h
--
-
 /home/ghosto/Documents/uni/INF574/TODOs_And_Project/Harmonic-Coordinates-for-Character-Articulation/MeanValueCoordinates.cpp
 igl/opengl/glfw/Viewer.h
 -
