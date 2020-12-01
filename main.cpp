@@ -13,9 +13,55 @@ using namespace std;
 
 #define PI 3.14159265
 
-typedef vector<double> v1d;
-typedef vector<v1d> v2d;
-typedef vector<v2d> v3d;
+enum cell_Type{UNTYPED, EXTERIOR, BOUNDARY, INTERIOR};
+
+
+
+
+string to_enum(int label) {
+    if(label == UNTYPED) {
+        return "UNTYPED";
+    }
+    if(label == EXTERIOR) {
+        return "EXTERIOR";
+    }
+    if(label == BOUNDARY) {
+        return "BOUNDARY";
+    }
+    if(label == INTERIOR) {
+        return "INTERIOR";
+    }
+}
+struct Cell{
+    vector<double> harmonicCoordinates ;
+    int label;
+    Cell() {
+        label = UNTYPED;
+    }
+    void initialize(int n) {
+        for (int i = 0; i<n ; i++ ) {
+            harmonicCoordinates.push_back(0); //initial values are 0
+        }
+        label = UNTYPED; //initial label is UNTYPED
+    }
+
+    void to_string() {
+        cout<<"\nCell Type: "<<to_enum(label)<<endl;
+        cout<<"Harmonic Coordinates: [";
+
+        for(auto it = harmonicCoordinates.begin(); it<harmonicCoordinates.end(); it++) {
+            cout<< *it;
+            if(it != harmonicCoordinates.end()-1) {
+                cout<<", ";
+            }
+        }
+        cout<<"]"<<endl;
+    }
+};
+
+
+typedef vector<Cell> v2d;
+typedef vector<v2d> Grid;
 
 
 
@@ -35,6 +81,7 @@ void print(vector<double> v) {
 	}
 	cout << "]" << endl;
 }
+
 
 /**
  * Create a cage
@@ -195,22 +242,27 @@ int main(int argc, char *argv[])
 	viewer.data().add_points(Model, RowVector3d(255, 255, 255));
 	viewer.data().add_edges(Model, Wm, RowVector3d(255, 0, 255));
 
-    MatrixXd Grid; //build grid
+    MatrixXd GridVertices; //build grid
     int s = 6; //based on paper, s controls size of grid 2^s
-    createGridCell(Grid, s);
-    viewer.data().add_points(Grid, RowVector3d(50, 50, 0));
+    createGridCell(GridVertices, s);
+    viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
 
 
+    int numberOrRowCells = (int)(sqrt(pow(2,s))) + 1;
+    int numberOrColCells = numberOrRowCells;  //square grid we are working on
+    int cageVerticesCount = V.rows();
 
-    //trying to create a cell grid to propagate on
+    // Grid is a vector or vector <Cell> where Cell contains a vector of harmonic coordinates and a TYPE
+    Grid grid(numberOrRowCells, v2d(numberOrColCells));
 
-    v3d cells(5, v2d(3, v1d(2, 4)));
+    //initialize grid cells;
 
-
-
-
-
-
+    for(int i = 0; i<numberOrRowCells; i++ ){
+        for(int j = 0; j<numberOrColCells; j++ ){
+            grid[i][j].initialize(cageVerticesCount);
+            grid[i][j].to_string(); //to print the cell type and harmonic coord
+        }
+    }
 
 
     viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
