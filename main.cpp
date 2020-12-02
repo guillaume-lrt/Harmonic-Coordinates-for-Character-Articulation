@@ -64,9 +64,21 @@ struct Cell{
 typedef vector<Cell> v2d;
 typedef vector<v2d> Grid;
 
+igl::opengl::glfw::Viewer viewer; // create the 3d viewer
 
-MatrixXd V;
-MatrixXi E;
+MatrixXd Cage; //Cage vertices
+MatrixXi CageEdges; //Cage Edges
+
+MatrixXd Model; //our ineterior little 2D human
+MatrixXd Em; //Model edges
+
+MatrixXd GridVertices; //Grid 2^s cells behind the model and cage
+
+const int offsetX = -8; //X offset of the cage
+const int offsetY = 8.5; //Y offset of the cage to enclose model
+const int h = 2.85; //jumps between cells of the cage
+
+const int interpolationPrecision = 20; //10 point on edges to detect cells
 
 // This function is called every time a keyboard button is pressed
 bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier)
@@ -188,12 +200,10 @@ void createGridCell(MatrixXd& grid, int s) {
     int nbOfVertices = verticesPerSide*verticesPerSide;
     cout<< "\nsquare side nbVertices: " << squareSideCells +1;
     cout<< "\nnbVertices: " << nbOfVertices;
-    int offsetX = -8;
-    int offsetY = 8.5;
 
     int counterX = 0;
     int counterY = 0;
-    int h = 2.85; //jumps between vertices
+
     grid = MatrixXd(nbOfVertices, 2);
 
     int i =0;
@@ -257,36 +267,89 @@ void label_cage(Grid& grid) {
 	}
 }
 
+void mapVerticesToGridCoord(int &x, int &y, int vCageindex) {
+    y = (int)floor((Cage(vCageindex,0) - offsetX)/h); //FLIP y x for grid
+    x = (int)floor((offsetY - Cage(vCageindex,1))/h); // y is opposite sign in scree cooridnates
+}
 
+void mapVerticesToGridCoord(int &xCell, int &yCell, double xVertix, double yVertix) {
+    yCell = (int)floor((xVertix - offsetX)/h); //FLIP y x for grid
+    xCell = (int)floor((offsetY - yVertix)/h); // y is opposite sign in scree cooridnates
+}
+
+void fillBoundaryCells(Grid &grid) {
+    //Loop over cage vertices and map them to cells
+    //interpolate and fill other boundary cells
+    // to do the mapping to the cage graph we need to do a translation of
+    // offsetX and offsetY for each point we have before filling the grid
+    cout<<"Entered Boundary cells "<<grid.size()<< " "<<Cage.rows();
+
+    int x = 0; //x in terms of cell --> remember x goes vertically down as row and y horiz as columns
+    int y = 0; //y in terms of cell
+    for(int i =0; i<Cage.rows(); i++) {
+        mapVerticesToGridCoord( x, y, i);
+        cout<<"\n"<<x<<" "<<y;
+        //mark the x,y cell as boundary
+        if(grid[x][y].label != BOUNDARY) {
+            grid[x][y].label = BOUNDARY;
+            viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
+        }
+        //viewer.data().add_label(Cage.row(i),"BOUNDARY");
+    }
+
+    //Loop over edges of cage, interpolate with certain precision and mark grid boundaries
+
+    int v1Index = 0;
+    int v2Index = 0;
+
+    double alpha = 1.0/interpolationPrecision;
+    VectorXd v;
+
+    for(int i=0; i<CageEdges.rows(); i++) {
+        v1Index = CageEdges(i,0);
+        v2Index = CageEdges(i,1);
+        //cout<<endl<<"Interpolation between: "<<v1Index<<" "<<v2Index<<endl;
+        for(int j = 0; j<interpolationPrecision; j++) {
+            // the next two interpolation values should be used as harmonic coordinates for these boundary cells
+            v = j*alpha*Cage.row(v1Index) + (1-j*alpha)*Cage.row(v2Index); //linear interpolations
+
+            mapVerticesToGridCoord(x, y, v(0), v(1));
+
+            if(grid[x][y].label != BOUNDARY) {
+                grid[x][y].label = BOUNDARY;
+                viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
+            }
+        }
+        //cout<<endl;
+    }
+
+}
 
 // ------------ main program ----------------
 int main(int argc, char *argv[])
 {
 
-    igl::opengl::glfw::Viewer viewer; // create the 3d viewer
-
-
-	createCage(V,E);
+	createCage(Cage, CageEdges);
 
 	MatrixXd C = MatrixXd::Zero(1, 3);			// for the color (black)
-	MatrixXd W = MatrixXd::Zero(V.rows(), 2);		// V shifted by 1 to draw edges
+	MatrixXd W = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
 
-	MatrixXd Model;
+
 	createModel(Model);
 
-	MatrixXd Wm = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
+	Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
 
-	createEdges(V, W); //CAGE
-	viewer.data().add_points(V, RowVector3d(255, 0, 0));
-	viewer.data().add_edges(V, W, RowVector3d(0, 255, 0));
+	createEdges(Cage, W); //CAGE
+	viewer.data().add_points(Cage, RowVector3d(255, 0, 0));
+	viewer.data().add_edges(Cage, W, RowVector3d(0, 255, 0));
 
 
 
-	createEdges(Model, Wm); // MODEL
+	createEdges(Model, Em); // MODEL
 	viewer.data().add_points(Model, RowVector3d(255, 255, 255));
-	viewer.data().add_edges(Model, Wm, RowVector3d(255, 0, 255));
+	viewer.data().add_edges(Model, Em, RowVector3d(255, 0, 255));
 
-    MatrixXd GridVertices; //build grid
+     //build grid
     int s = 6; //based on paper, s controls size of grid 2^s
     createGridCell(GridVertices, s);
     viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
@@ -294,7 +357,7 @@ int main(int argc, char *argv[])
 
     int numberOrRowCells = (int)(sqrt(pow(2,s))) + 1;
     int numberOrColCells = numberOrRowCells;  //square grid we are working on
-    int cageVerticesCount = V.rows();
+    int cageVerticesCount = Cage.rows();
 
     // Grid is a vector or vector <Cell> where Cell contains a vector of harmonic coordinates and a TYPE
     Grid grid(numberOrRowCells, v2d(numberOrColCells));
@@ -317,10 +380,10 @@ int main(int argc, char *argv[])
 
 	grid[5][3].label = BOUNDARY;
 	grid[2][4].label = BOUNDARY;
-	
+
 	grid[5][4].label = BOUNDARY;
 	grid[2][5].label = BOUNDARY;
-	
+
 	grid[5][5].label = BOUNDARY;
 	grid[2][6].label = BOUNDARY;
 
@@ -343,7 +406,7 @@ int main(int argc, char *argv[])
 	grid[6][4].label = BOUNDARY;
 	grid[6][5].label = BOUNDARY;
 	grid[6][6].label = BOUNDARY;
-	
+
 	label_cage(grid);
 
     for(int i = 0; i<numberOrRowCells; i++ ){
@@ -353,9 +416,14 @@ int main(int argc, char *argv[])
             grid[i][j].to_string(); //to print the cell type and harmonic coord
         }
     }
- 
 
+
+    //fill the boundary edges first
+    cout<<"Calling boundaries:";
+    fillBoundaryCells(grid);
+    cout<<"\nDONE";
     viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
 	//viewer.core(0).align_camera_center(V, F);
+    viewer.data().show_custom_labels = true;
 	viewer.launch(); // run the viewer
 }
