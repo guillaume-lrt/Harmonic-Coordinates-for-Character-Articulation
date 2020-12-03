@@ -301,48 +301,48 @@ int main(int argc, char *argv[])
 
     //initialize grid cells;
 
-	//grid[2][0].label = BOUNDARY;
-	//grid[3][0].label = BOUNDARY;
-	//grid[4][0].label = BOUNDARY;
-	//grid[5][0].label = BOUNDARY;
-	//grid[2][1].label = BOUNDARY;
-	//grid[3][1].label = BOUNDARY;
-	//grid[4][1].label = BOUNDARY;
-	//grid[5][1].label = BOUNDARY;
-	//grid[2][2].label = BOUNDARY;
-	//grid[3][2].label = BOUNDARY;
-	//grid[4][2].label = BOUNDARY;
-	//grid[5][2].label = BOUNDARY;
-	//grid[2][3].label = BOUNDARY;
+	grid[2][0].label = BOUNDARY;
+	grid[3][0].label = BOUNDARY;
+	grid[4][0].label = BOUNDARY;
+	grid[5][0].label = BOUNDARY;
+	grid[2][1].label = BOUNDARY;
+	grid[3][1].label = BOUNDARY;
+	grid[4][1].label = BOUNDARY;
+	grid[5][1].label = BOUNDARY;
+	grid[2][2].label = BOUNDARY;
+	grid[3][2].label = BOUNDARY;
+	grid[4][2].label = BOUNDARY;
+	grid[5][2].label = BOUNDARY;
+	grid[2][3].label = BOUNDARY;
 
-	//grid[5][3].label = BOUNDARY;
-	//grid[2][4].label = BOUNDARY;
-	//
-	//grid[5][4].label = BOUNDARY;
-	//grid[2][5].label = BOUNDARY;
-	//
-	//grid[5][5].label = BOUNDARY;
-	//grid[2][6].label = BOUNDARY;
+	grid[5][3].label = BOUNDARY;
+	grid[2][4].label = BOUNDARY;
+	
+	grid[5][4].label = BOUNDARY;
+	grid[2][5].label = BOUNDARY;
+	
+	grid[5][5].label = BOUNDARY;
+	grid[2][6].label = BOUNDARY;
 
-	//grid[5][6].label = BOUNDARY;
-	//grid[2][7].label = BOUNDARY;
-	//grid[3][7].label = BOUNDARY;
-	//grid[4][7].label = BOUNDARY;
-	//grid[5][7].label = BOUNDARY;
+	grid[5][6].label = BOUNDARY;
+	grid[2][7].label = BOUNDARY;
+	grid[3][7].label = BOUNDARY;
+	grid[4][7].label = BOUNDARY;
+	grid[5][7].label = BOUNDARY;
 
-	//grid[0][4].label = BOUNDARY;
-	//grid[0][5].label = BOUNDARY;
-	//grid[0][6].label = BOUNDARY;
-	//grid[1][4].label = BOUNDARY;
-	//grid[1][5].label = BOUNDARY;
-	//grid[1][6].label = BOUNDARY;
+	grid[0][4].label = BOUNDARY;
+	grid[0][5].label = BOUNDARY;
+	grid[0][6].label = BOUNDARY;
+	grid[1][4].label = BOUNDARY;
+	grid[1][5].label = BOUNDARY;
+	grid[1][6].label = BOUNDARY;
 
-	//grid[7][4].label = BOUNDARY;
-	//grid[7][5].label = BOUNDARY;
-	//grid[7][6].label = BOUNDARY;
-	//grid[6][4].label = BOUNDARY;
-	//grid[6][5].label = BOUNDARY;
-	//grid[6][6].label = BOUNDARY;
+	grid[7][4].label = BOUNDARY;
+	grid[7][5].label = BOUNDARY;
+	grid[7][6].label = BOUNDARY;
+	grid[6][4].label = BOUNDARY;
+	grid[6][5].label = BOUNDARY;
+	grid[6][6].label = BOUNDARY;
 	
 	label_cage(grid);
 
