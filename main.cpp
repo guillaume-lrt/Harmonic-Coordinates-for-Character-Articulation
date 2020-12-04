@@ -93,7 +93,7 @@ void print(vector<double> v) {
 /**
  * Create a cage
  */
-void createCage(MatrixXd &Vertices, MatrixXi &Edges)
+void createHumanCage(MatrixXd &Vertices, MatrixXi &Edges)
 {
 
     Vertices = MatrixXd(19, 2);
@@ -344,7 +344,7 @@ void printGrid(Grid& grid) {
 // ------------ main program ----------------
 int main(int argc, char *argv[]) {
 
-	createCage(Cage, CageEdges);
+    createHumanCage(Cage, CageEdges);
 	MatrixXd W = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
 	createEdges(Cage, W); //CAGE
 
