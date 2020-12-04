@@ -140,7 +140,7 @@ void createCage(MatrixXd &Vertices, MatrixXi &Edges)
 		18, 0;
 }
 
-void createModel(MatrixXd& Model) {
+void createHumanModel(MatrixXd& Model) {
 	Model = MatrixXd(32, 2);//32
 
 	Model << 0, 6.5,
@@ -188,7 +188,7 @@ void createEdges(const MatrixXd& V, MatrixXd &W) {
 }
 
 
-void createGridCell(MatrixXd& grid, int s) {
+void createGridVertices(MatrixXd& grid, int s) {
     int squareSideCells = (int)(sqrt(pow(2,s)));
 
     int verticesPerSide = squareSideCells+1;
@@ -218,50 +218,6 @@ void createGridCell(MatrixXd& grid, int s) {
 
 }
 
-vector<int> grid_neighbour(Grid& grid,int i, int j) {
-	// output: vector of indices of neighbour of grid[i][j]
-	vector<int> res;
-	int n = grid.size();
-	//cout << "n: " << n << ", " << grid[0].size() << endl;
-	for (int k = -1; k <= 1; k++) {
-		for (int l = -1; l <= 1; l++) {
-			if (k != 0 || l != 0) {
-				if (k + i <= n-1 && k + i >= 0 && l + j <= n-1 && l + j >= 0) {
-					res.push_back(k + i);
-					res.push_back(l + j);
-				};
-			}
-		}
-	}
-	return res;
-}
-
-void explore_grid(Grid& grid, int i, int j) {
-	//cout << i << ", " << j << endl;
-	if (grid[i][j].label == UNTYPED) {
-		//cout << "test\n";
-		grid[i][j].label = EXTERIOR;
-		auto neigh = grid_neighbour(grid, i, j);
-		for (int k = 0; k < neigh.size(); k = k + 2) {
-			explore_grid(grid, neigh[k], neigh[k + 1]);
-		}
-	}
-}
-
-
-void label_cage(Grid& grid) {
-	int n = grid.size();
-	explore_grid(grid, 0, 0);
-	explore_grid(grid, 0, n - 1);
-	explore_grid(grid, n - 1, 0);
-	explore_grid(grid, n-1, n-1);
-	for (auto& i : grid) {
-		for (auto& j : i) {
-			if (j.label == UNTYPED) j.label = INTERIOR;
-		}
-	}
-}
-
 void mapVerticesToGridCoord(int &x, int &y, int vCageindex) {
     y = (int)floor((Cage(vCageindex,0) - offsetX)/h); //FLIP y x for grid
     x = (int)floor((offsetY - Cage(vCageindex,1))/h); // y is opposite sign in scree cooridnates
@@ -287,7 +243,7 @@ void fillBoundaryCells(Grid &grid) {
         //mark the x,y cell as boundary
         if(grid[x][y].label != BOUNDARY) {
             grid[x][y].label = BOUNDARY;
-            viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
+            //viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
         }
         //viewer.data().add_label(Cage.row(i),"BOUNDARY");
     }
@@ -312,45 +268,103 @@ void fillBoundaryCells(Grid &grid) {
 
             if(grid[x][y].label != BOUNDARY) {
                 grid[x][y].label = BOUNDARY;
-                viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
+                //viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
             }
         }
         //cout<<endl;
     }
-
 }
 
+vector<int> grid_neighbour(Grid& grid,int i, int j) {
+	// output: vector of indices of neighbour of grid[i][j]
+	vector<int> res;
+	int n = grid.size();
+	//cout << "n: " << n << ", " << grid[0].size() << endl;
+	for (int k = -1; k <= 1; k++) {
+		for (int l = -1; l <= 1; l++) {
+			if (k != 0 || l != 0) {
+				if (k + i <= n-1 && k + i >= 0 && l + j <= n-1 && l + j >= 0) {
+					res.push_back(k + i);
+					res.push_back(l + j);
+				};
+			}
+		}
+	}
+	return res;
+}
+
+void exploreGrid(Grid& grid, int i, int j) {
+	//cout << i << ", " << j << endl;
+	if (grid[i][j].label == UNTYPED) {
+		//cout << "test\n";
+		grid[i][j].label = EXTERIOR;
+        viewer.data().add_label(GridVertices.row(9*i+j),"EXTERIOR");
+		auto neigh = grid_neighbour(grid, i, j);
+		for (int k = 0; k < neigh.size(); k = k + 2) {
+            exploreGrid(grid, neigh[k], neigh[k + 1]);
+		}
+	}
+}
+
+
+void labelGrid(Grid& grid) {
+    fillBoundaryCells(grid); //Fill BOUNDARY edges with interpolation and then propagate for exterior
+
+    int n = grid.size();
+
+	exploreGrid(grid, 0, 0); //TODO can be changed to something more robust
+    exploreGrid(grid, 0, n - 1);
+    exploreGrid(grid, n - 1, 0);
+    exploreGrid(grid, n-1, n-1);
+
+    for (auto& i : grid) { // Everything that is not labeled now can be considered interior
+		for (auto& j : i) {
+			if (j.label == UNTYPED) j.label = INTERIOR;
+		}
+	}
+}
+
+void printGrid(Grid& grid) {
+    cout<<"\n\n";
+    cout<<"----------------- Printing the Grid ----------------- \n\n";
+    int n = grid.size();
+    for(int i=0; i<n; i++) {
+        for(int j=0; j<n; j++) {
+            if(grid[i][j].label == UNTYPED) cout<<"U";
+            else if(grid[i][j].label == EXTERIOR) cout<<"-  ";
+            else if(grid[i][j].label == BOUNDARY) cout<<"|  ";
+            else if(grid[i][j].label == INTERIOR) cout<<"*  ";
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+}
+
+
 // ------------ main program ----------------
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
 	createCage(Cage, CageEdges);
-
-	MatrixXd C = MatrixXd::Zero(1, 3);			// for the color (black)
 	MatrixXd W = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
-
-
-	createModel(Model);
-
-	Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
-
 	createEdges(Cage, W); //CAGE
+
 	viewer.data().add_points(Cage, RowVector3d(255, 0, 0));
 	viewer.data().add_edges(Cage, W, RowVector3d(0, 255, 0));
 
 
+    createHumanModel(Model);
+    Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
+    createEdges(Model, Em); // MODEL
 
-	createEdges(Model, Em); // MODEL
-	viewer.data().add_points(Model, RowVector3d(255, 255, 255));
+    viewer.data().add_points(Model, RowVector3d(255, 255, 255));
 	viewer.data().add_edges(Model, Em, RowVector3d(255, 0, 255));
 
-     //build grid
+	//build grid of cells
     int s = 6; //based on paper, s controls size of grid 2^s
-    createGridCell(GridVertices, s);
+    createGridVertices(GridVertices, s); //Grid vertices are the vertices the appear in the background
     viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
 
-
-    int numberOrRowCells = (int)(sqrt(pow(2,s))) + 1;
+    int numberOrRowCells = (int)(sqrt(pow(2,s)));
     int numberOrColCells = numberOrRowCells;  //square grid we are working on
     int cageVerticesCount = Cage.rows();
 
@@ -358,67 +372,22 @@ int main(int argc, char *argv[])
     Grid grid(numberOrRowCells, v2d(numberOrColCells));
 
     //initialize grid cells;
-
-	grid[2][0].label = BOUNDARY;
-	grid[3][0].label = BOUNDARY;
-	grid[4][0].label = BOUNDARY;
-	grid[5][0].label = BOUNDARY;
-	grid[2][1].label = BOUNDARY;
-	grid[3][1].label = BOUNDARY;
-	grid[4][1].label = BOUNDARY;
-	grid[5][1].label = BOUNDARY;
-	grid[2][2].label = BOUNDARY;
-	grid[3][2].label = BOUNDARY;
-	grid[4][2].label = BOUNDARY;
-	grid[5][2].label = BOUNDARY;
-	grid[2][3].label = BOUNDARY;
-
-	grid[5][3].label = BOUNDARY;
-	grid[2][4].label = BOUNDARY;
-
-	grid[5][4].label = BOUNDARY;
-	grid[2][5].label = BOUNDARY;
-
-	grid[5][5].label = BOUNDARY;
-	grid[2][6].label = BOUNDARY;
-
-	grid[5][6].label = BOUNDARY;
-	grid[2][7].label = BOUNDARY;
-	grid[3][7].label = BOUNDARY;
-	grid[4][7].label = BOUNDARY;
-	grid[5][7].label = BOUNDARY;
-
-	grid[0][4].label = BOUNDARY;
-	grid[0][5].label = BOUNDARY;
-	grid[0][6].label = BOUNDARY;
-	grid[1][4].label = BOUNDARY;
-	grid[1][5].label = BOUNDARY;
-	grid[1][6].label = BOUNDARY;
-
-	grid[7][4].label = BOUNDARY;
-	grid[7][5].label = BOUNDARY;
-	grid[7][6].label = BOUNDARY;
-	grid[6][4].label = BOUNDARY;
-	grid[6][5].label = BOUNDARY;
-	grid[6][6].label = BOUNDARY;
-
-	label_cage(grid);
-
     for(int i = 0; i<numberOrRowCells; i++ ){
         for(int j = 0; j<numberOrColCells; j++ ){
-            //grid[i][j].initialize(cageVerticesCount);
-			cout << "\nCell[" << i << "][" << j << "]";
-            grid[i][j].to_string(); //to print the cell type and harmonic coord
+            grid[i][j].initialize(cageVerticesCount);
+            //grid[i][j].to_string(); //to print the cell type and harmonic coord
         }
     }
 
 
-    //fill the boundary edges first
-    cout<<"Calling boundaries:";
-    fillBoundaryCells(grid);
-    cout<<"\nDONE";
+    //label the cage cells as INTERIOR, BOUNDARY, EXTERIOR
+    labelGrid(grid);
+
+    //To see the grid in a nice way
+    printGrid(grid);
+
+
     viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
-	//viewer.core(0).align_camera_center(V, F);
     viewer.data().show_custom_labels = true;
 	viewer.launch(); // run the viewer
 }
