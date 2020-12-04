@@ -81,7 +81,7 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 	return true;
 }
 
-void print(vector<double> v) {
+void printVector(vector<double> v) {
 	cout << "[";
 	for (auto& i : v) {
 		cout << i << "  ";
@@ -233,16 +233,16 @@ void fillBoundaryCells(Grid &grid) {
     //interpolate and fill other boundary cells
     // to do the mapping to the cage graph we need to do a translation of
     // offsetX and offsetY for each point we have before filling the grid
-    cout<<"Entered Boundary cells "<<grid.size()<< " "<<Cage.rows();
 
     int x = 0; //x in terms of cell --> remember x goes vertically down as row and y horiz as columns
     int y = 0; //y in terms of cell
     for(int i =0; i<Cage.rows(); i++) {
         mapVerticesToGridCoord( x, y, i);
-        cout<<"\n"<<x<<" "<<y;
         //mark the x,y cell as boundary
         if(grid[x][y].label != BOUNDARY) {
             grid[x][y].label = BOUNDARY;
+            grid[x][y].harmonicCoordinates[i] = 1; //harmonic coordinates of this cell is 0...1..0 where 1 is at ith index
+            grid[x][y].to_string();
             //viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
         }
         //viewer.data().add_label(Cage.row(i),"BOUNDARY");
@@ -260,18 +260,25 @@ void fillBoundaryCells(Grid &grid) {
         v1Index = CageEdges(i,0);
         v2Index = CageEdges(i,1);
         //cout<<endl<<"Interpolation between: "<<v1Index<<" "<<v2Index<<endl;
+        double interpV1 = 0;
+        double interpV2 = 0;
+
         for(int j = 0; j<interpolationPrecision; j++) {
             // the next two interpolation values should be used as harmonic coordinates for these boundary cells
-            v = j*alpha*Cage.row(v1Index) + (1-j*alpha)*Cage.row(v2Index); //linear interpolations
+            interpV1 = j*alpha;
+            interpV2 = (1-interpV1);
+            v = interpV1*Cage.row(v1Index) + interpV2*Cage.row(v2Index); //linear interpolations
 
             mapVerticesToGridCoord(x, y, v(0), v(1));
 
             if(grid[x][y].label != BOUNDARY) {
                 grid[x][y].label = BOUNDARY;
+                grid[x][y].harmonicCoordinates[v1Index] = interpV1;
+                grid[x][y].harmonicCoordinates[v2Index] = interpV2;
+                grid[x][y].to_string();
                 //viewer.data().add_label(GridVertices.row(9*x+y),"BOUNDARY");
             }
         }
-        //cout<<endl;
     }
 }
 
@@ -279,7 +286,7 @@ vector<int> grid_neighbour(Grid& grid,int i, int j) {
 	// output: vector of indices of neighbour of grid[i][j]
 	vector<int> res;
 	int n = grid.size();
-	//cout << "n: " << n << ", " << grid[0].size() << endl;
+
 	for (int k = -1; k <= 1; k++) {
 		for (int l = -1; l <= 1; l++) {
 			if (k != 0 || l != 0) {
@@ -294,9 +301,9 @@ vector<int> grid_neighbour(Grid& grid,int i, int j) {
 }
 
 void exploreGrid(Grid& grid, int i, int j) {
-	//cout << i << ", " << j << endl;
+
 	if (grid[i][j].label == UNTYPED) {
-		//cout << "test\n";
+
 		grid[i][j].label = EXTERIOR;
         viewer.data().add_label(GridVertices.row(9*i+j),"EXTERIOR");
 		auto neigh = grid_neighbour(grid, i, j);
@@ -333,11 +340,40 @@ void printGrid(Grid& grid) {
             if(grid[i][j].label == UNTYPED) cout<<"U";
             else if(grid[i][j].label == EXTERIOR) cout<<"-  ";
             else if(grid[i][j].label == BOUNDARY) cout<<"|  ";
-            else if(grid[i][j].label == INTERIOR) cout<<"*  ";
+            else if(grid[i][j].label == INTERIOR) cout<<"-  ";
         }
         cout<<endl;
     }
     cout<<endl;
+}
+
+double forceZeroLaplacian(Grid &grid, int i, int j) {
+    int n = grid.size(); //assume square grid
+    //Need to force zero laplacian following the discrete law of laplacian and return the current change from old to new
+
+}
+
+
+void propagateLaplacian(Grid &grid, double threshold) {
+
+    int n = grid.size();
+    double maxChange = 0; //positive always, change in harmonic values as mean
+    double currentChange = 0; // also positive, local change of harmonic values as mean
+    while(true) {
+        for(int i=0; i<n; i++) {
+            for (int j = 0; j < n; j++) {
+                if(grid[i][j].label == INTERIOR) { //the propagation only happens on interior cells and in order/efficiency
+                    currentChange = forceZeroLaplacian(grid, i, j);
+                    if(currentChange > maxChange) {
+                        maxChange = currentChange; //TODO later save the current change over each cell and present them
+                    }
+                }
+            }
+        }
+        cout<<maxChange<<endl;
+        if(maxChange < threshold) break;
+    }
+
 }
 
 
@@ -386,6 +422,11 @@ int main(int argc, char *argv[]) {
     //To see the grid in a nice way
     printGrid(grid);
 
+/*    for(int i = 0; i<numberOrRowCells; i++ ){
+        for(int j = 0; j<numberOrColCells; j++ ){
+            grid[i][j].to_string(); //to print the cell type and harmonic coord
+        }
+    }*/
 
     viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
     viewer.data().show_custom_labels = true;
