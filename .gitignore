@@ -1,2 +1,6 @@
 build/*
 cmake-build-debug/*
+build/
+cmake-build-debug/
+cmake-build-debug
+build
