@@ -5,6 +5,7 @@
 #include <igl/writeOFF.h>
 #include <math.h>
 #include "MeanValueCoordinates.cpp"
+//#include "HarmonicCoordinates.cpp"
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
@@ -62,7 +63,6 @@ struct Cell{
 
 typedef vector<Cell> v2d;
 typedef vector<v2d> Grid;
-
 
 
 MatrixXd V;
@@ -213,6 +213,50 @@ void createGridCell(MatrixXd& grid, int s) {
 
 }
 
+vector<int> grid_neighbour(Grid& grid,int i, int j) {
+	// output: vector of indices of neighbour of grid[i][j]
+	vector<int> res;
+	int n = grid.size();
+	//cout << "n: " << n << ", " << grid[0].size() << endl;
+	for (int k = -1; k <= 1; k++) {
+		for (int l = -1; l <= 1; l++) {
+			if (k != 0 || l != 0) {
+				if (k + i <= n-1 && k + i >= 0 && l + j <= n-1 && l + j >= 0) {
+					res.push_back(k + i);
+					res.push_back(l + j);
+				};
+			}
+		}
+	}
+	return res;
+}
+
+void explore_grid(Grid& grid, int i, int j) {
+	//cout << i << ", " << j << endl;
+	if (grid[i][j].label == UNTYPED) {
+		//cout << "test\n";
+		grid[i][j].label = EXTERIOR;
+		auto neigh = grid_neighbour(grid, i, j);
+		for (int k = 0; k < neigh.size(); k = k + 2) {
+			explore_grid(grid, neigh[k], neigh[k + 1]);
+		}
+	}
+}
+
+
+void label_cage(Grid& grid) {
+	int n = grid.size();
+	explore_grid(grid, 0, 0);
+	explore_grid(grid, 0, n - 1);
+	explore_grid(grid, n - 1, 0);
+	explore_grid(grid, n-1, n-1);
+	for (auto& i : grid) {
+		for (auto& j : i) {
+			if (j.label == UNTYPED) j.label = INTERIOR;
+		}
+	}
+}
+
 
 
 // ------------ main program ----------------
@@ -257,10 +301,56 @@ int main(int argc, char *argv[])
 
     //initialize grid cells;
 
+	grid[2][0].label = BOUNDARY;
+	grid[3][0].label = BOUNDARY;
+	grid[4][0].label = BOUNDARY;
+	grid[5][0].label = BOUNDARY;
+	grid[2][1].label = BOUNDARY;
+	grid[3][1].label = BOUNDARY;
+	grid[4][1].label = BOUNDARY;
+	grid[5][1].label = BOUNDARY;
+	grid[2][2].label = BOUNDARY;
+	grid[3][2].label = BOUNDARY;
+	grid[4][2].label = BOUNDARY;
+	grid[5][2].label = BOUNDARY;
+	grid[2][3].label = BOUNDARY;
+
+	grid[5][3].label = BOUNDARY;
+	grid[2][4].label = BOUNDARY;
+	
+	grid[5][4].label = BOUNDARY;
+	grid[2][5].label = BOUNDARY;
+	
+	grid[5][5].label = BOUNDARY;
+	grid[2][6].label = BOUNDARY;
+
+	grid[5][6].label = BOUNDARY;
+	grid[2][7].label = BOUNDARY;
+	grid[3][7].label = BOUNDARY;
+	grid[4][7].label = BOUNDARY;
+	grid[5][7].label = BOUNDARY;
+
+	grid[0][4].label = BOUNDARY;
+	grid[0][5].label = BOUNDARY;
+	grid[0][6].label = BOUNDARY;
+	grid[1][4].label = BOUNDARY;
+	grid[1][5].label = BOUNDARY;
+	grid[1][6].label = BOUNDARY;
+
+	grid[7][4].label = BOUNDARY;
+	grid[7][5].label = BOUNDARY;
+	grid[7][6].label = BOUNDARY;
+	grid[6][4].label = BOUNDARY;
+	grid[6][5].label = BOUNDARY;
+	grid[6][6].label = BOUNDARY;
+	
+	label_cage(grid);
+
     for(int i = 0; i<numberOrRowCells; i++ ){
         for(int j = 0; j<numberOrColCells; j++ ){
-            grid[i][j].initialize(cageVerticesCount);
-            //grid[i][j].to_string(); //to print the cell type and harmonic coord
+            //grid[i][j].initialize(cageVerticesCount);
+			cout << "\nCell[" << i << "][" << j << "]";
+            grid[i][j].to_string(); //to print the cell type and harmonic coord
         }
     }
 
