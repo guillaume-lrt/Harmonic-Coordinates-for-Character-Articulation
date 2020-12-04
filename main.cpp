@@ -1,13 +1,8 @@
 #include <igl/opengl/glfw/Viewer.h>
 #include <iostream>
 #include <ostream>
-#include <igl/readOFF.h>
-#include <igl/writeOFF.h>
 #include <math.h>
-#include "MeanValueCoordinates.cpp"
-//#include "HarmonicCoordinates.cpp"
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
+
 
 using namespace Eigen;
 using namespace std;
