@@ -3,14 +3,30 @@
 #include <ostream>
 #include <math.h>
 
-
 using namespace Eigen;
 using namespace std;
-
-#define PI 3.14159265
-
 enum cell_Type{UNTYPED, EXTERIOR, BOUNDARY, INTERIOR};
 
+
+const double h = 2; //jumps between cells of the cage 2.85
+const int interpolationPrecision = 20; //10 point on edges to detect cells
+const int s = 6; //based on paper, s controls size of grid 2^s
+
+
+igl::opengl::glfw::Viewer viewer; // create the 3d viewer
+
+MatrixXd Cage; //Cage vertices
+MatrixXi CageEdgesIndices; //Cage Edges indices!!
+MatrixXd Ec; //Cage edges
+
+
+MatrixXd Model; //our ineterior little 2D human
+MatrixXd Em; //Model edges
+
+MatrixXd GridVertices; //Grid 2^s cells behind the model and cage
+
+const double offsetX = -8; //X offset of the cage -8
+const double offsetY = 8; //Y offset of the cage to enclose model 8.5
 
 
 
@@ -29,6 +45,7 @@ string to_enum(int label) {
     }
     return "Not Found";
 }
+
 struct Cell{
     vector<double> harmonicCoordinates ;
     int label;
@@ -56,28 +73,10 @@ struct Cell{
     }
 };
 
-
 typedef vector<Cell> v2d;
 typedef vector<v2d> Grid;
 
-igl::opengl::glfw::Viewer viewer; // create the 3d viewer
-
-MatrixXd Cage; //Cage vertices
-MatrixXi CageEdgesIndices; //Cage Edges indices!!
-MatrixXd Ec; //Cage edges
-
-
-MatrixXd Model; //our ineterior little 2D human
-MatrixXd Em; //Model edges
-
-MatrixXd GridVertices; //Grid 2^s cells behind the model and cage
-
 Grid grid;
-const double offsetX = -8; //X offset of the cage -8
-const double offsetY = 8; //Y offset of the cage to enclose model 8.5
-const double h = 2; //jumps between cells of the cage 2.85
-
-const int interpolationPrecision = 20; //10 point on edges to detect cells
 
 void printVector(vector<double> v) {
 	cout << "[";
@@ -338,7 +337,7 @@ void printGrid(Grid& grid) {
             if(grid[i][j].label == UNTYPED) cout<<"U";
             else if(grid[i][j].label == EXTERIOR) cout<<"-  ";
             else if(grid[i][j].label == BOUNDARY) cout<<"|  ";
-            else if(grid[i][j].label == INTERIOR) cout<<"-  ";
+            else if(grid[i][j].label == INTERIOR) cout<<"*  ";
         }
         cout<<endl;
     }
@@ -484,7 +483,6 @@ int main(int argc, char *argv[]) {
     createEdges(Model, Em); // MODEL
 
 	//build grid of cells
-    int s = 6; //based on paper, s controls size of grid 2^s
     createGridVertices(GridVertices, s); //Grid vertices are the vertices the appear in the background
     //viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
 
