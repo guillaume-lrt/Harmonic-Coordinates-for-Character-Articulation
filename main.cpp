@@ -451,6 +451,22 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
         Cage(5,0) -= 1;
         refreshViewer();
     }
+    if (key == '2')
+    {
+        Cage(5,0) += 1;
+        refreshViewer();
+    }
+
+    if (key == '3')
+    {
+        Cage(4,1) -= 1;
+        refreshViewer();
+    }
+    if (key == '4')
+    {
+        Cage(4,1) += 1;
+        refreshViewer();
+    }
 
     return false;
 }
@@ -504,5 +520,7 @@ int main(int argc, char *argv[]) {
     //Refresh the viewer to show results
     refreshViewer(); //Takes care of rebuilding the edges also
 
-	viewer.launch(); // run the viewer
+    viewer.callback_key_down = &key_down;
+    viewer.core().is_animating = true; // animation is active
+    viewer.launch(); // run the viewer
 }
