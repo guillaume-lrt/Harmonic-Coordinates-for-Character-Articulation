@@ -27,6 +27,7 @@ string to_enum(int label) {
     if(label == INTERIOR) {
         return "INTERIOR";
     }
+    return "Not Found";
 }
 struct Cell{
     vector<double> harmonicCoordinates ;
@@ -62,24 +63,21 @@ typedef vector<v2d> Grid;
 igl::opengl::glfw::Viewer viewer; // create the 3d viewer
 
 MatrixXd Cage; //Cage vertices
-MatrixXi CageEdges; //Cage Edges
+MatrixXi CageEdgesIndices; //Cage Edges indices!!
+MatrixXd Ec; //Cage edges
+
 
 MatrixXd Model; //our ineterior little 2D human
 MatrixXd Em; //Model edges
 
 MatrixXd GridVertices; //Grid 2^s cells behind the model and cage
 
-const int offsetX = -8; //X offset of the cage
-const int offsetY = 8.5; //Y offset of the cage to enclose model
-const int h = 2.85; //jumps between cells of the cage
+Grid grid;
+const double offsetX = -8; //X offset of the cage -8
+const double offsetY = 8; //Y offset of the cage to enclose model 8.5
+const double h = 2; //jumps between cells of the cage 2.85
 
 const int interpolationPrecision = 20; //10 point on edges to detect cells
-
-// This function is called every time a keyboard button is pressed
-bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier)
-{
-	return true;
-}
 
 void printVector(vector<double> v) {
 	cout << "[";
@@ -196,8 +194,8 @@ void createGridVertices(MatrixXd& grid, int s) {
     cout<< "\nsquare side nbVertices: " << squareSideCells +1;
     cout<< "\nnbVertices: " << nbOfVertices;
 
-    int counterX = 0;
-    int counterY = 0;
+    double counterX = 0;
+    double counterY = 0;
 
     grid = MatrixXd(nbOfVertices, 2);
 
@@ -256,9 +254,9 @@ void fillBoundaryCells(Grid &grid) {
     double alpha = 1.0/interpolationPrecision;
     VectorXd v;
 
-    for(int i=0; i<CageEdges.rows(); i++) {
-        v1Index = CageEdges(i,0);
-        v2Index = CageEdges(i,1);
+    for(int i=0; i<CageEdgesIndices.rows(); i++) {
+        v1Index = CageEdgesIndices(i,0);
+        v2Index = CageEdgesIndices(i,1);
         //cout<<endl<<"Interpolation between: "<<v1Index<<" "<<v2Index<<endl;
         double interpV1 = 0;
         double interpV2 = 0;
@@ -305,7 +303,7 @@ void exploreGrid(Grid& grid, int i, int j) {
 	if (grid[i][j].label == UNTYPED) {
 
 		grid[i][j].label = EXTERIOR;
-        viewer.data().add_label(GridVertices.row(9*i+j),"EXTERIOR");
+        //viewer.data().add_label(GridVertices.row(9*i+j),"EXTERIOR");
 		auto neigh = grid_neighbour(grid, i, j);
 		for (int k = 0; k < neigh.size(); k = k + 2) {
             exploreGrid(grid, neigh[k], neigh[k + 1]);
@@ -348,9 +346,29 @@ void printGrid(Grid& grid) {
 }
 
 double forceZeroLaplacian(Grid &grid, int i, int j) {
-    int n = grid.size(); //assume square grid
+
     //Need to force zero laplacian following the discrete law of laplacian and return the current change from old to new
 
+    //assume a cage is all over the model and thus we will always have surrouding 4 cells ! this can be easly changed later
+    if(i<0 || j<0) return 0;
+
+    int n = grid.size(); //assume square grid
+    int harmoniceSize = grid[i][j].harmonicCoordinates.size(); //assume square grid
+
+    double holder = 0;
+    double change = 0;
+    for(int v = 0; v<harmoniceSize; v++) {
+        //formula is [i-1][j] + [i+1][j] + [i][j-1]  + [i][j+1] = 4  * [i][j]
+        holder = grid[i][j].harmonicCoordinates[v];
+        grid[i][j].harmonicCoordinates[v] = grid[i-1][j].harmonicCoordinates[v] + grid[i+1][j].harmonicCoordinates[v]
+                                            + grid[i][j-1].harmonicCoordinates[v] + grid[i][j+1].harmonicCoordinates[v];
+
+        grid[i][j].harmonicCoordinates[v] /= 4;
+
+        change += abs(grid[i][j].harmonicCoordinates[v] - holder);
+    }
+
+    return change/harmoniceSize;
 }
 
 
@@ -359,7 +377,11 @@ void propagateLaplacian(Grid &grid, double threshold) {
     int n = grid.size();
     double maxChange = 0; //positive always, change in harmonic values as mean
     double currentChange = 0; // also positive, local change of harmonic values as mean
-    while(true) {
+
+    int counter = 0;
+    while(true) { //till we reach the thresh we need
+        maxChange = 0;
+        counter++;
         for(int i=0; i<n; i++) {
             for (int j = 0; j < n; j++) {
                 if(grid[i][j].label == INTERIOR) { //the propagation only happens on interior cells and in order/efficiency
@@ -370,43 +392,93 @@ void propagateLaplacian(Grid &grid, double threshold) {
                 }
             }
         }
-        cout<<maxChange<<endl;
+        cout<<"Max Change: " << maxChange << "    Round: " << counter << endl;
         if(maxChange < threshold) break;
     }
 
 }
 
 
+void updateModelBasedOnHCoordinates(MatrixXd &Model, MatrixXd  &Cage, Grid &grid) {
+    //Loop over model and map to cage cell to update coordinates
+    int x = 0;
+    int y = 0;
+    for(int i=0; i<Model.rows(); i++) {
+        mapVerticesToGridCoord(x, y, Model(i,0), Model(i,1));
+
+        for(int c=0; c<Cage.rows(); c++) {
+            if(c==0) {
+                Model.row(i) = grid[x][y].harmonicCoordinates[c]*Cage.row(c);
+                continue;
+            }
+            Model.row(i) += grid[x][y].harmonicCoordinates[c]*Cage.row(c);
+        }
+    }
+}
+
+void refreshViewer() {
+
+    viewer.data().clear();
+
+    updateModelBasedOnHCoordinates(Model, Cage, grid);
+    //add Cage and Cage edges
+    viewer.data().add_points(Cage, RowVector3d(255, 0, 0));
+    createEdges(Cage, Ec);
+    viewer.data().add_edges(Cage, Ec, RowVector3d(0, 255, 0));
+
+    //add Model and model edges
+    viewer.data().add_points(Model, RowVector3d(255, 255, 255));
+    createEdges(Model, Em);
+    viewer.data().add_edges(Model, Em, RowVector3d(255, 0, 255));
+
+    //add te Grid layer
+    viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
+
+
+    viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
+    viewer.data().show_custom_labels = true;
+
+}
+
+
+
+// This function is called every time a keyboard button is pressed
+bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier)
+{
+    cout << "pressed Key: " << key << " " << (unsigned int)key << std::endl;
+    if (key == '1')
+    {
+        Cage(5,0) -= 1;
+        refreshViewer();
+    }
+
+    return false;
+}
+
 // ------------ main program ----------------
 int main(int argc, char *argv[]) {
 
-    createHumanCage(Cage, CageEdges);
-	MatrixXd W = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
-	createEdges(Cage, W); //CAGE
-
-	viewer.data().add_points(Cage, RowVector3d(255, 0, 0));
-	viewer.data().add_edges(Cage, W, RowVector3d(0, 255, 0));
+    createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
+	Ec = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
+	createEdges(Cage, Ec); //CAGE
 
 
     createHumanModel(Model);
     Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
     createEdges(Model, Em); // MODEL
 
-    viewer.data().add_points(Model, RowVector3d(255, 255, 255));
-	viewer.data().add_edges(Model, Em, RowVector3d(255, 0, 255));
-
 	//build grid of cells
     int s = 6; //based on paper, s controls size of grid 2^s
     createGridVertices(GridVertices, s); //Grid vertices are the vertices the appear in the background
-    viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
+    //viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
 
     int numberOrRowCells = (int)(sqrt(pow(2,s)));
     int numberOrColCells = numberOrRowCells;  //square grid we are working on
     int cageVerticesCount = Cage.rows();
 
     // Grid is a vector or vector <Cell> where Cell contains a vector of harmonic coordinates and a TYPE
-    Grid grid(numberOrRowCells, v2d(numberOrColCells));
-
+    Grid grid_(numberOrRowCells, v2d(numberOrColCells));
+    grid = grid_;
     //initialize grid cells;
     for(int i = 0; i<numberOrRowCells; i++ ){
         for(int j = 0; j<numberOrColCells; j++ ){
@@ -419,16 +491,18 @@ int main(int argc, char *argv[]) {
     //label the cage cells as INTERIOR, BOUNDARY, EXTERIOR
     labelGrid(grid);
 
+    double threshold = 0.00001; // 10^-5 as paper used
+    //Propagate laplacian
+    propagateLaplacian(grid, threshold);
+
+    //Update Current positions based on HC
+    //updateModelBasedOnHCoordinates(Model, Cage, grid);
+
     //To see the grid in a nice way
     printGrid(grid);
 
-/*    for(int i = 0; i<numberOrRowCells; i++ ){
-        for(int j = 0; j<numberOrColCells; j++ ){
-            grid[i][j].to_string(); //to print the cell type and harmonic coord
-        }
-    }*/
+    //Refresh the viewer to show results
+    refreshViewer(); //Takes care of rebuilding the edges also
 
-    viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
-    viewer.data().show_custom_labels = true;
 	viewer.launch(); // run the viewer
 }
