@@ -174,6 +174,43 @@ void createHumanModel(MatrixXd& Model) {
 		1, 6.3;
 }
 
+void createSquareCage(MatrixXd& Vertices, MatrixXi& Edges) {
+    Vertices = MatrixXd(8, 2);
+
+    Vertices << -3.5, -3.5,
+        -3.5, -0.5,
+        -3.5, 2.5,
+        -0.5, 2.5,
+        2.5, 2.5,
+        2.5, -0.5,
+        2.5, -3.5,
+        -0.5, -3.5;
+
+    Edges = MatrixXi(8, 2);
+
+    Edges << 0, 1,
+        1, 2,
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 0;
+}
+
+void createSquareModel(MatrixXd& Model) {
+    Model = MatrixXd(8, 2);
+
+    Model << -1.75, -1.75,
+        -1.75, -0.25,
+        -1.75, 1.25,
+        -0.25, 1.25,
+        1.25, 1.25,
+        1.25, -0.25,
+        1.25, -1.75,
+        -0.25, -1.75;
+}
+
 
 void createEdges(const MatrixXd& V, MatrixXd &W) {
 	// shift V by 1 to draw edges
@@ -473,12 +510,14 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 // ------------ main program ----------------
 int main(int argc, char *argv[]) {
 
-    createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
+    //createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
+    createSquareCage(Cage, CageEdgesIndices);
 	Ec = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
 	createEdges(Cage, Ec); //CAGE
 
 
-    createHumanModel(Model);
+    //createHumanModel(Model);
+    createSquareModel(Model);
     Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
     createEdges(Model, Em); // MODEL
 
