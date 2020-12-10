@@ -10,7 +10,7 @@ enum cell_Type{UNTYPED, EXTERIOR, BOUNDARY, INTERIOR};
 
 const double h = 1; //jumps between cells of the cage 2.85
 const int interpolationPrecision = 50; //10 point on edges to detect cells
-const int s = 10; //based on paper, s controls size of grid 2^s
+const int s = 11; //based on paper, s controls size of grid 2^s
 int vertex_count = 5;   // vertex to move with keys 1,2,3 and 4
                         // use 'p' and 'm' to change vertex
 
@@ -238,6 +238,36 @@ void createSquareCageS10(MatrixXd& Vertices, MatrixXi& Edges) {
 }
 
 void createSquareModelS10(MatrixXd& Model) {
+    Model = MatrixXd(8, 2);
+
+    Model << 2.25, -12.75, 2.25, -8.25, 2.25, -3.75, 6.75, -3.75, 11.25, -3.75, 11.25, -8.25, 11.25, -12.75, 6.75, -12.75;
+}
+
+void createSquareCageS11(MatrixXd& Vertices, MatrixXi& Edges) {
+    Vertices = MatrixXd(8, 2);
+
+    Vertices << -6.5, -25.5,
+        -5.5, -4.5,
+        -4.5, 8.5,
+        8.5, 7.5,
+        30.5, 6.5,
+        29.5, -9.5,
+        28.5, -27.5,
+        6.5, -26.5;
+
+    Edges = MatrixXi(8, 2);
+
+    Edges << 0, 1,
+        1, 2,
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 0;
+}
+
+void createSquareModelS11(MatrixXd& Model) {
     Model = MatrixXd(8, 2);
 
     Model << 2.25, -12.75, 2.25, -8.25, 2.25, -3.75, 6.75, -3.75, 11.25, -3.75, 11.25, -8.25, 11.25, -12.75, 6.75, -12.75;
@@ -552,13 +582,13 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 int main(int argc, char *argv[]) {
 
     //createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
-    createSquareCageS10(Cage, CageEdgesIndices);
+    createSquareCageS11(Cage, CageEdgesIndices);
 	Ec = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
 	createEdges(Cage, Ec); //CAGE
 
 
     //createHumanModel(Model);
-    createSquareModelS10(Model);
+    createSquareModelS11(Model);
     Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
     createEdges(Model, Em); // MODEL
 
