@@ -8,9 +8,11 @@ using namespace std;
 enum cell_Type{UNTYPED, EXTERIOR, BOUNDARY, INTERIOR};
 
 
-const double h = 2; //jumps between cells of the cage 2.85
-const int interpolationPrecision = 20; //10 point on edges to detect cells
-const int s = 6; //based on paper, s controls size of grid 2^s
+const double h = 1; //jumps between cells of the cage 2.85
+const int interpolationPrecision = 50; //10 point on edges to detect cells
+const int s = 11; //based on paper, s controls size of grid 2^s
+int vertex_count = 5;   // vertex to move with keys 1,2,3 and 4
+                        // use 'p' and 'm' to change vertex
 
 
 igl::opengl::glfw::Viewer viewer; // create the 3d viewer
@@ -26,7 +28,7 @@ MatrixXd Em; //Model edges
 MatrixXd GridVertices; //Grid 2^s cells behind the model and cage
 
 const double offsetX = -8; //X offset of the cage -8
-const double offsetY = 8; //Y offset of the cage to enclose model 8.5
+const double offsetY = 9; //Y offset of the cage to enclose model 8.5
 
 
 
@@ -174,6 +176,102 @@ void createHumanModel(MatrixXd& Model) {
 		1, 6.3;
 }
 
+void createSquareCage(MatrixXd& Vertices, MatrixXi& Edges) {
+    Vertices = MatrixXd(8, 2);
+
+    Vertices << -3.5, -3.5,
+        -3.5, -0.5,
+        -3.5, 2.5,
+        -0.5, 2.5,
+        2.5, 2.5,
+        2.5, -0.5,
+        2.5, -3.5,
+        -0.5, -3.5;
+
+    Edges = MatrixXi(8, 2);
+
+    Edges << 0, 1,
+        1, 2,
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 0;
+}
+
+void createSquareModel(MatrixXd& Model) {
+    Model = MatrixXd(8, 2);
+
+    Model << -1.75, -1.75,
+        -1.75, -0.25,
+        -1.75, 1.25,
+        -0.25, 1.25,
+        1.25, 1.25,
+        1.25, -0.25,
+        1.25, -1.75,
+        -0.25, -1.75;
+}
+
+void createSquareCageS10(MatrixXd& Vertices, MatrixXi& Edges) {
+    Vertices = MatrixXd(8, 2);
+
+    Vertices << -6.5, -17.5,
+        -5.5, -4.5,
+        -4.5, 8.5,
+        8.5, 7.5,
+        21.5, 6.5,
+        20.5, -6.5,
+        19.5, -19.5,
+        6.5, -18.5;
+
+    Edges = MatrixXi(8, 2);
+
+    Edges << 0, 1,
+        1, 2,
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 0;
+}
+
+void createSquareModelS10(MatrixXd& Model) {
+    Model = MatrixXd(8, 2);
+
+    Model << 2.25, -12.75, 2.25, -8.25, 2.25, -3.75, 6.75, -3.75, 11.25, -3.75, 11.25, -8.25, 11.25, -12.75, 6.75, -12.75;
+}
+
+void createSquareCageS11(MatrixXd& Vertices, MatrixXi& Edges) {
+    Vertices = MatrixXd(8, 2);
+
+    Vertices << -6.5, -25.5,
+        -5.5, -4.5,
+        -4.5, 8.5,
+        8.5, 7.5,
+        30.5, 6.5,
+        29.5, -9.5,
+        28.5, -27.5,
+        6.5, -26.5;
+
+    Edges = MatrixXi(8, 2);
+
+    Edges << 0, 1,
+        1, 2,
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 0;
+}
+
+void createSquareModelS11(MatrixXd& Model) {
+    Model = MatrixXd(8, 2);
+
+    Model << 2.25, -12.75, 2.25, -8.25, 2.25, -3.75, 6.75, -3.75, 11.25, -3.75, 11.25, -8.25, 11.25, -12.75, 6.75, -12.75;
+}
 
 void createEdges(const MatrixXd& V, MatrixXd &W) {
 	// shift V by 1 to draw edges
@@ -287,10 +385,12 @@ vector<int> grid_neighbour(Grid& grid,int i, int j) {
 	for (int k = -1; k <= 1; k++) {
 		for (int l = -1; l <= 1; l++) {
 			if (k != 0 || l != 0) {
-				if (k + i <= n-1 && k + i >= 0 && l + j <= n-1 && l + j >= 0) {
-					res.push_back(k + i);
-					res.push_back(l + j);
-				};
+                if (k == 0 || l == 0) {
+                    if (k + i <= n - 1 && k + i >= 0 && l + j <= n - 1 && l + j >= 0) {
+                        res.push_back(k + i);
+                        res.push_back(l + j);
+                    }
+                }
 			}
 		}
 	}
@@ -447,38 +547,48 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
     cout << "pressed Key: " << key << " " << (unsigned int)key << std::endl;
     if (key == '1')
     {
-        Cage(5,0) -= 1;
+        Cage(vertex_count,0) -= 1;
         refreshViewer();
     }
     if (key == '2')
     {
-        Cage(5,0) += 1;
+        Cage(vertex_count,0) += 1;
         refreshViewer();
     }
 
     if (key == '3')
     {
-        Cage(4,1) -= 1;
+        Cage(vertex_count,1) -= 1;
         refreshViewer();
     }
     if (key == '4')
     {
-        Cage(4,1) += 1;
+        Cage(vertex_count,1) += 1;
         refreshViewer();
     }
 
+    if (key == 'P') {
+        cout << vertex_count << endl;
+        vertex_count++;
+        cout << vertex_count << endl;
+    }
+    if (key == 'M' && vertex_count > 0) {
+        vertex_count--;
+    }
     return false;
 }
 
 // ------------ main program ----------------
 int main(int argc, char *argv[]) {
 
-    createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
+    //createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
+    createSquareCageS11(Cage, CageEdgesIndices);
 	Ec = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
 	createEdges(Cage, Ec); //CAGE
 
 
-    createHumanModel(Model);
+    //createHumanModel(Model);
+    createSquareModelS11(Model);
     Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
     createEdges(Model, Em); // MODEL
 
