@@ -8,9 +8,10 @@ using namespace std;
 enum cell_Type{UNTYPED, EXTERIOR, BOUNDARY, INTERIOR};
 
 
-const double h = 1; //jumps between cells of the cage 2.85
+//const double h = 2; //jumps between cells of the cage 2.85
+double h = 1; //jumps between cells of the cage 2.85
 const int interpolationPrecision = 50; //10 point on edges to detect cells
-const int s = 11; //based on paper, s controls size of grid 2^s
+int s = 10; //based on paper, s controls size of grid 2^s
 int vertex_count = 5;   // vertex to move with keys 1,2,3 and 4
                         // use 'p' and 'm' to change vertex
 
@@ -28,7 +29,8 @@ MatrixXd Em; //Model edges
 MatrixXd GridVertices; //Grid 2^s cells behind the model and cage
 
 const double offsetX = -8; //X offset of the cage -8
-const double offsetY = 9; //Y offset of the cage to enclose model 8.5
+//const double offsetY = 8; //Y offset of the cage to enclose model 8.5
+double offsetY = 9; //Y offset of the cage to enclose model 8.5
 
 
 
@@ -243,17 +245,17 @@ void createSquareModelS10(MatrixXd& Model) {
     Model << 2.25, -12.75, 2.25, -8.25, 2.25, -3.75, 6.75, -3.75, 11.25, -3.75, 11.25, -8.25, 11.25, -12.75, 6.75, -12.75;
 }
 
-void createSquareCageS11(MatrixXd& Vertices, MatrixXi& Edges) {
+void createSquareCageS12(MatrixXd& Vertices, MatrixXi& Edges) {
     Vertices = MatrixXd(8, 2);
 
-    Vertices << -6.5, -25.5,
+    Vertices << -6.5, -45.5,
         -5.5, -4.5,
         -4.5, 8.5,
         8.5, 7.5,
-        30.5, 6.5,
-        29.5, -9.5,
-        28.5, -27.5,
-        6.5, -26.5;
+        50.5, 6.5,
+        49.5, -9.5,
+        48.5, -47.5,
+        6.5, -46.5;
 
     Edges = MatrixXi(8, 2);
 
@@ -267,7 +269,7 @@ void createSquareCageS11(MatrixXd& Vertices, MatrixXi& Edges) {
         7, 0;
 }
 
-void createSquareModelS11(MatrixXd& Model) {
+void createSquareModelS12(MatrixXd& Model) {
     Model = MatrixXd(8, 2);
 
     Model << 2.25, -12.75, 2.25, -8.25, 2.25, -3.75, 6.75, -3.75, 11.25, -3.75, 11.25, -8.25, 11.25, -12.75, 6.75, -12.75;
@@ -333,6 +335,7 @@ void fillBoundaryCells(Grid &grid) {
     int y = 0; //y in terms of cell
     for(int i =0; i<Cage.rows(); i++) {
         mapVerticesToGridCoord( x, y, i);
+        cout<<"\n x"<<x<<" y"<<y<<" i"<<i;
         //mark the x,y cell as boundary
         if(grid[x][y].label != BOUNDARY) {
             grid[x][y].label = BOUNDARY;
@@ -413,7 +416,7 @@ void exploreGrid(Grid& grid, int i, int j) {
 
 void labelGrid(Grid& grid) {
     fillBoundaryCells(grid); //Fill BOUNDARY edges with interpolation and then propagate for exterior
-
+    cout<<"\nBoundary Labeled";
     int n = grid.size();
 
 	exploreGrid(grid, 0, 0); //TODO can be changed to something more robust
@@ -462,7 +465,7 @@ double forceZeroLaplacian(Grid &grid, int i, int j) {
         grid[i][j].harmonicCoordinates[v] = grid[i-1][j].harmonicCoordinates[v] + grid[i+1][j].harmonicCoordinates[v]
                                             + grid[i][j-1].harmonicCoordinates[v] + grid[i][j+1].harmonicCoordinates[v];
 
-        grid[i][j].harmonicCoordinates[v] /= 4;
+        grid[i][j].harmonicCoordinates[v] /= 4.0;
 
         change += abs(grid[i][j].harmonicCoordinates[v] - holder);
     }
@@ -534,7 +537,7 @@ void refreshViewer() {
     viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
 
 
-    viewer.data().point_size = 13; //SIZE or vertices in the viewer (circle size)
+    viewer.data().point_size = 4; //SIZE or vertices in the viewer (circle size)
     viewer.data().show_custom_labels = true;
 
 }
@@ -581,14 +584,45 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 // ------------ main program ----------------
 int main(int argc, char *argv[]) {
 
-    //createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
-    createSquareCageS11(Cage, CageEdgesIndices);
+
+
+    //FOR normal Human Cage uncomment this
+    h = 2;
+    s = 6;
+    offsetY = 8;
+    createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
+    createHumanModel(Model);
+
+
+    //For square normal model
+    /*h=2;
+    s=6;
+    offsetY = 8;
+    createSquareCage(Cage, CageEdgesIndices);
+    createSquareModel(Model);*/
+
+
+    //For square model for s = 10
+    /*h=1;
+    s=10;
+    offsetY = 9;
+    createSquareCageS10(Cage, CageEdgesIndices);
+    createSquareModelS10(Model);*/
+
+
+
+    //For square model s = 12
+    /*h=1;
+    s=12;
+    offsetY = 9;
+    createSquareCageS12(Cage, CageEdgesIndices);
+    createSquareModelS12(Model);*/
+
+
 	Ec = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
 	createEdges(Cage, Ec); //CAGE
 
 
-    //createHumanModel(Model);
-    createSquareModelS11(Model);
     Em = MatrixXd::Zero(Model.rows(), 2);		// edges for the model
     createEdges(Model, Em); // MODEL
 
@@ -614,17 +648,32 @@ int main(int argc, char *argv[]) {
 
     //label the cage cells as INTERIOR, BOUNDARY, EXTERIOR
     labelGrid(grid);
-
-    double threshold = 0.00001; // 10^-5 as paper used
+    cout<<"\nGRID Labeled";
+    //double threshold = 0.00001; // 10^-5 as paper used
+    double threshold = 0.0000000001; // 10^-10
     //Propagate laplacian
     propagateLaplacian(grid, threshold);
-
+    cout<<"\nLaplacina Propagated";
     //Update Current positions based on HC
     //updateModelBasedOnHCoordinates(Model, Cage, grid);
 
     //To see the grid in a nice way
     printGrid(grid);
+    int interiorCellCount = 0;
+    for(int i = 0; i<numberOrRowCells; i++ ){
+        for(int j = 0; j<numberOrColCells; j++ ){
+            // grid[i][j].to_string(); //to print the cell type and harmonic coord
+            if(grid[i][j].label == INTERIOR) interiorCellCount++;
+            for(auto e: grid[i][j].harmonicCoordinates) {
+                if(e<0) {
+                    std::cout<<"ERRORR NEGATIVE VALUE";
+                    break;
+                }
+            }
+        }
+    }
 
+    cout<<"\nINTERIOR Cell Count: "<<interiorCellCount<<"\n";
     //Refresh the viewer to show results
     refreshViewer(); //Takes care of rebuilding the edges also
 
