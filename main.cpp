@@ -28,7 +28,7 @@ MatrixXd Em; //Model edges
 
 MatrixXd GridVertices; //Grid 2^s cells behind the model and cage
 
-const double offsetX = -8; //X offset of the cage -8
+double offsetX = -8; //X offset of the cage -8
 //const double offsetY = 8; //Y offset of the cage to enclose model 8.5
 double offsetY = 9; //Y offset of the cage to enclose model 8.5
 
@@ -176,6 +176,130 @@ void createHumanModel(MatrixXd& Model) {
 		1.3, 5,
 		1.4, 6,
 		1, 6.3;
+}
+
+void createBiggerHumanCage(MatrixXd& Vertices, MatrixXi& Edges)
+{
+
+    Vertices = MatrixXd(19, 2);
+    Edges = MatrixXi(19, 2);
+
+    Vertices << -8., 28., -8.8, 20., -31.2, 12., -28.8, 4., -10.,
+        9.2, -12., -16., -13.2, -28., -4., -28., -1.2, -16.,
+        0., -10., 1.2, -16., 4., -28., 13.2, -28., 12.,
+        -16., 10., 9.2, 28.8, 4., 31.2, 12., 8.8, 20.,
+        8., 28.;
+
+    Edges << 0, 1,
+        1, 2,
+        2, 3,
+        3, 4,
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 8,
+        8, 9,
+        9, 10,
+        10, 11,
+        11, 12,
+        12, 13,
+        13, 14,
+        14, 15,
+        15, 16,
+        16, 17,
+        17, 18,
+        18, 0;
+}
+
+void createBiggerHumanCage_pos1(MatrixXd& Vertices)
+{
+
+    Vertices = MatrixXd(19, 2);
+
+    Vertices << -8., 28., 
+        -8.8, 20., 
+        -31.2, 12., 
+        -28.8, 4., 
+        -10., 9.2, 
+        -16., -16., 
+        -19.2, -32.,
+        -9, -32., 
+        -3.2, -16.,
+        0., -10., 
+        1.2, -16., 
+        4., -28., 
+        13.2, -28., 
+        12.,-16., 
+        10., 9.2, 
+        28.8, 4., 
+        31.2, 12., 
+        8.8, 20.,
+        8., 28.;
+}
+
+void createBiggerHumanCage_pos2(MatrixXd& Vertices)
+{
+
+    Vertices = MatrixXd(19, 2);
+
+    Vertices << -8., 28.,
+        -8.8, 20.,
+        -31.2, 12.,
+        -28.8, 4.,
+        -10., 9.2,
+        -16., -16.,
+        -17.2, -21.,
+        -5, -21.,
+        -3.2, -16.,
+        0., -10.,
+        1.2, -16.,
+        4., -28.,
+        13.2, -28.,
+        12., -16.,
+        10., 9.2,
+        28.8, 4.,
+        31.2, 12.,
+        8.8, 20.,
+        8., 28.;
+}
+
+void createBiggerHumanCage_head(MatrixXd& Vertices)
+{
+
+    Vertices = MatrixXd(19, 2);
+
+    Vertices << -12., 32.,
+        -8, 19.,
+        -31.2, 12.,
+        -28.8, 4.,
+        -10., 9.2,
+        -12., -16., 
+        -13.2, -28., 
+        -4., -28.,
+        -1.2, -16.,
+        0., -10.,
+        1.2, -16.,
+        4., -28.,
+        13.2, -28.,
+        12., -16.,
+        10., 9.2,
+        28.8, 4.,
+        31.2, 12.,
+        8.8, 20.,
+        4., 32.;
+}
+
+void createBiggerHumanModel(MatrixXd& Model) {
+    Model = MatrixXd(32, 2);//32
+
+    Model << 0., 26., -4., 25.2, -5.6, 24., -5.2, 20., -4.,
+        18., -26., 10.8, -28., 8., -24., 7.6, -10., 12.,
+        -7.2, 10.6, -7.6, -4., -11.2, -24., -10.4, -26., -7.6,
+        -26., -6., -24., -4., -13.2, 0., -6., 4., -13.2,
+        6., -24., 7.6, -26., 10.4, -26., 11.2, -24., 7.6,
+        -4., 7.2, 10.6, 10., 12., 24., 7.6, 28., 8.,
+        26., 10.8, 4., 18., 5.2, 20., 5.6, 24., 4.,
+        25.2;
 }
 
 void createSquareCage(MatrixXd& Vertices, MatrixXi& Edges) {
@@ -494,7 +618,7 @@ void propagateLaplacian(Grid &grid, double threshold) {
                 }
             }
         }
-        cout<<"Max Change: " << maxChange << "    Round: " << counter << endl;
+        //cout<<"Max Change: " << maxChange << "    Round: " << counter << endl;
         if(maxChange < threshold) break;
     }
 
@@ -539,7 +663,6 @@ void refreshViewer() {
 
     viewer.data().point_size = 4; //SIZE or vertices in the viewer (circle size)
     viewer.data().show_custom_labels = true;
-
 }
 
 
@@ -551,22 +674,26 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
     if (key == '1')
     {
         Cage(vertex_count,0) -= 1;
+        cout << Cage(vertex_count, 0) << endl;
         refreshViewer();
     }
     if (key == '2')
     {
         Cage(vertex_count,0) += 1;
+        cout << Cage(vertex_count, 0) << endl;
         refreshViewer();
     }
 
     if (key == '3')
     {
         Cage(vertex_count,1) -= 1;
+        cout << Cage(vertex_count, 1) << endl;
         refreshViewer();
     }
     if (key == '4')
     {
         Cage(vertex_count,1) += 1;
+        cout << Cage(vertex_count, 1) << endl;
         refreshViewer();
     }
 
@@ -578,6 +705,31 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
     if (key == 'M' && vertex_count > 0) {
         vertex_count--;
     }
+
+    if (key == 'A') {
+        // move left leg down
+        createBiggerHumanCage_pos1(Cage);
+        refreshViewer();
+    }
+
+    if (key == 'B') {
+        // move left leg up
+        createBiggerHumanCage_pos2(Cage);
+        refreshViewer();
+    }
+
+    if (key == 'H') {
+        // move head up left
+        createBiggerHumanCage_head(Cage);
+        refreshViewer();
+    }
+
+    if (key == 'R') {
+        // reset the view
+        createBiggerHumanCage(Cage, CageEdgesIndices);
+        createBiggerHumanModel(Model);
+        refreshViewer();
+    }
     return false;
 }
 
@@ -587,11 +739,18 @@ int main(int argc, char *argv[]) {
 
 
     //FOR normal Human Cage uncomment this
-    h = 2;
-    s = 6;
-    offsetY = 8;
-    createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
-    createHumanModel(Model);
+    //h = 2;
+    //s = 6;
+    //offsetY = 8;
+    //createHumanCage(Cage, CageEdgesIndices); //Cage Edges indices are needed Keep them !!
+    //createHumanModel(Model);
+
+    h = 1;
+    s = 13;
+    offsetY = 35;
+    offsetX = -35;
+    createBiggerHumanCage(Cage, CageEdgesIndices);
+    createBiggerHumanModel(Model);
 
 
     //For square normal model
