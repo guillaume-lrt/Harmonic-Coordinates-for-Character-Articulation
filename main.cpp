@@ -22,7 +22,7 @@ MatrixXd Cage; //Cage vertices
 MatrixXi CageEdgesIndices; //Cage Edges indices!!
 MatrixXd Ec; //Cage edges
 
-
+MatrixXd init_Model;
 MatrixXd Model; //our ineterior little 2D human
 MatrixXd Em; //Model edges
 
@@ -646,6 +646,8 @@ void refreshViewer() {
 
     viewer.data().clear();
 
+    Model = init_Model;             // to avoid glitches, start from initial model
+    
     updateModelBasedOnHCoordinates(Model, Cage, grid);
     //add Cage and Cage edges
     viewer.data().add_points(Cage, RowVector3d(255, 0, 0));
@@ -674,12 +676,14 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
     if (key == '1')
     {
         Cage(vertex_count,0) -= 1;
+        //createBiggerHumanModel(Model);
         cout << Cage(vertex_count, 0) << endl;
         refreshViewer();
     }
     if (key == '2')
     {
         Cage(vertex_count,0) += 1;
+        //createBiggerHumanModel(Model);
         cout << Cage(vertex_count, 0) << endl;
         refreshViewer();
     }
@@ -687,12 +691,14 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
     if (key == '3')
     {
         Cage(vertex_count,1) -= 1;
+        //createBiggerHumanModel(Model);
         cout << Cage(vertex_count, 1) << endl;
         refreshViewer();
     }
     if (key == '4')
     {
         Cage(vertex_count,1) += 1;
+        //createBiggerHumanModel(Model);
         cout << Cage(vertex_count, 1) << endl;
         refreshViewer();
     }
@@ -727,7 +733,8 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
     if (key == 'R') {
         // reset the view
         createBiggerHumanCage(Cage, CageEdgesIndices);
-        createBiggerHumanModel(Model);
+        //createBiggerHumanModel(Model);
+        
         refreshViewer();
     }
     return false;
@@ -776,6 +783,8 @@ int main(int argc, char *argv[]) {
     offsetY = 9;
     createSquareCageS12(Cage, CageEdgesIndices);
     createSquareModelS12(Model);*/
+
+    init_Model = Model;
 
 
 	Ec = MatrixXd::Zero(Cage.rows(), 2);		// CAGE shifted by 1 to draw edges
