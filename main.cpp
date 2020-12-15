@@ -663,7 +663,9 @@ void refreshViewer() {
     viewer.data().add_points(GridVertices, RowVector3d(50, 50, 0));
 
 
-    viewer.data().point_size = 4; //SIZE or vertices in the viewer (circle size)
+    //viewer.data().point_size = 4; //SIZE or vertices in the viewer (circle size)
+    viewer.data().point_size = 5;
+    viewer.data().line_width = 2;
     viewer.data().show_custom_labels = true;
 }
 
@@ -673,14 +675,14 @@ void refreshViewer() {
 bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier)
 {
     cout << "pressed Key: " << key << " " << (unsigned int)key << std::endl;
-    if (key == '1')
+    if (key == 'F')
     {
         Cage(vertex_count,0) -= 1;
         //createBiggerHumanModel(Model);
         cout << Cage(vertex_count, 0) << endl;
         refreshViewer();
     }
-    if (key == '2')
+    if (key == 'H')
     {
         Cage(vertex_count,0) += 1;
         //createBiggerHumanModel(Model);
@@ -688,14 +690,14 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
         refreshViewer();
     }
 
-    if (key == '3')
+    if (key == 'G')
     {
         Cage(vertex_count,1) -= 1;
         //createBiggerHumanModel(Model);
         cout << Cage(vertex_count, 1) << endl;
         refreshViewer();
     }
-    if (key == '4')
+    if (key == 'T')
     {
         Cage(vertex_count,1) += 1;
         //createBiggerHumanModel(Model);
@@ -712,19 +714,19 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
         vertex_count--;
     }
 
-    if (key == 'A') {
+    if (key == '1') {
         // move left leg down
         createBiggerHumanCage_pos1(Cage);
         refreshViewer();
     }
 
-    if (key == 'B') {
+    if (key == '2') {
         // move left leg up
         createBiggerHumanCage_pos2(Cage);
         refreshViewer();
     }
 
-    if (key == 'H') {
+    if (key == '3') {
         // move head up left
         createBiggerHumanCage_head(Cage);
         refreshViewer();
